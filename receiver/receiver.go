@@ -109,7 +109,7 @@ func handleConnection(connection net.Conn) {
 	logger.Log{logger.Green, time.Now().Format(time.RFC1123), log_message}.Stdout()
 
 	// send Validation back.
-	_, err = connection.Write([]byte("Echo From Server : " + connection.RemoteAddr().String() + string(buffer[:mLen])))
+	_, err = connection.Write([]byte("Received!"))
 
 	// close the connection
 	connection.Close()

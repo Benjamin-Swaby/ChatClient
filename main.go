@@ -2,6 +2,7 @@ package main
 
 import (
 	"ChatClient/receiver"
+	"ChatClient/sender"
 	"time"
 )
 
@@ -19,9 +20,17 @@ func main() {
 	// start the listening server (receiver)
 	go serverInit()
 
-	// hang
+	// send a request every 2 seconds to the local server
 	for {
-		time.Sleep(100 * time.Millisecond)
+
+		time.Sleep(2 * time.Second)
+
+		sender.Recipient{
+			Name:     "Benjamin",
+			Ip:       "192.168.1.20",
+			Port:     "1234",
+			Protocol: "tcp",
+		}.Send("Hello World!")
 	}
 
 }
