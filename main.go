@@ -1,15 +1,17 @@
 package main
 
 import (
+	"ChatClient/contacts"
+	"ChatClient/logger"
 	"ChatClient/receiver"
-	"ChatClient/sender"
 	"time"
 )
 
 // serverInit()
 // This procedure will parse a relevant config file and start a listening server
-func serverInit() {
-	err := receiver.StartServer(receiver.Host_Information{"192.168.1.20", "1234", "tcp"})
+func serverInit(HI receiver.Host_Information) {
+	logger.Log{logger.Blue, time.Now().Format(time.RFC1123), "Starting Server on:" + HI.Ip + ":" + HI.Port}.File()
+	err := receiver.StartServer(HI)
 	if err != nil {
 		err.ToLog().Stdout()
 	}
@@ -18,19 +20,14 @@ func serverInit() {
 // Entry Point
 func main() {
 	// start the listening server (receiver)
-	go serverInit()
+	go serverInit(receiver.Host_Information{"Benjamin Server", "192.168.1.20", "1234", "tcp"})
+
+	_, C_err := contacts.Import("/home/benjamin/.config/ChatClient/contacts")
+	if C_err != nil {
+		C_err.LogToFile()
+	}
 
 	// send a request every 2 seconds to the local server
-	for {
-
-		time.Sleep(2 * time.Second)
-
-		sender.Recipient{
-			Name:     "Benjamin",
-			Ip:       "192.168.1.20",
-			Port:     "1234",
-			Protocol: "tcp",
-		}.Send("Hello World!")
-	}
+	//FROM:NotBenjamin:192.168.1.20:1234/Hello World!/Send
 
 }

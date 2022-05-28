@@ -1,8 +1,8 @@
 package receiver
 
 import (
+	"ChatClient/CCprotocol"
 	"ChatClient/logger"
-	"fmt"
 	"net"
 	"strconv"
 	"time"
@@ -10,6 +10,7 @@ import (
 
 // Information about where to recieve data.
 type Host_Information struct {
+	Name    string
 	Ip      string
 	Port    string
 	Protcol string
@@ -84,7 +85,7 @@ func StartServer(info Host_Information) receiver_error_interface {
 		}
 
 		// handle connection
-		go handleConnection(connection)
+		go handleConnection(connection, info.Protcol)
 	}
 
 	return nil
@@ -92,9 +93,10 @@ func StartServer(info Host_Information) receiver_error_interface {
 }
 
 // handleConnection()
-// reads the data into a buffer and will send a confirmation back to the client
-// also logs any incomming messages and where they were sent from.
-func handleConnection(connection net.Conn) {
+// reads the data into a buffer,
+// parses the request,
+// sends back a response
+func handleConnection(connection net.Conn, protocol string) {
 	// create an input buffer
 	buffer := make([]byte, 8192)
 
@@ -102,11 +104,23 @@ func handleConnection(connection net.Conn) {
 	mLen, err := connection.Read(buffer)
 
 	if err != nil {
-		fmt.Println("Error reading:", err.Error())
+		logger.Log{logger.Yellow_b, time.Now().Format(time.RFC1123), "Failed to read data from Connection"}.Stdout()
 	}
 
+	// log incoming message
 	log_message := "From:" + connection.RemoteAddr().String() + " -> " + string(buffer[:mLen])
-	logger.Log{logger.Green, time.Now().Format(time.RFC1123), log_message}.Stdout()
+	logger.Log{logger.Green, time.Now().Format(time.RFC1123), log_message}.File()
+
+	// parse Request
+	req := string(buffer[:mLen])
+
+	cc_obj, CCerr := CCprotocol.ParseAsCC(req, protocol)
+	if CCerr != nil {
+		CCerr.ToLog().File()
+	}
+
+	// do something with cc_obj
+	println(cc_obj.Sender_info.Name + " : " + cc_obj.Message)
 
 	// send Validation back.
 	_, err = connection.Write([]byte("Received!"))
