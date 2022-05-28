@@ -1,6 +1,8 @@
 package receiver
 
 import (
+	"ChatClient/logger"
+	"fmt"
 	"net"
 	"strconv"
 	"time"
@@ -8,15 +10,17 @@ import (
 
 // Information about where to recieve data.
 type Host_Information struct {
-	ip      string
-	port    string
-	protcol string
+	Ip      string
+	Port    string
+	Protcol string
 }
 
+// Host_Information.is_valid()
+// simple checks of the information to make sure it's worth actually trying to use it
 func (hi Host_Information) is_valid() receiver_error_interface {
 
-	port_int, err := strconv.Atoi(hi.port)
-
+	port_int, err := strconv.Atoi(hi.Port)
+	// is the port numeric
 	if err != nil {
 		return &receiver_error{
 			4,
@@ -25,6 +29,7 @@ func (hi Host_Information) is_valid() receiver_error_interface {
 			false}
 	}
 
+	// is the port in range
 	if port_int > 65535 || port_int < 1 {
 		return &receiver_error{
 			4,
@@ -33,7 +38,8 @@ func (hi Host_Information) is_valid() receiver_error_interface {
 			false}
 	}
 
-	if hi.protcol != "tcp" && hi.protcol != "udp" {
+	// is the protcol either tcp or udp
+	if hi.Protcol != "tcp" && hi.Protcol != "udp" {
 		return &receiver_error{
 			4,
 			"Protocol isn't tcp or udp",
@@ -44,7 +50,11 @@ func (hi Host_Information) is_valid() receiver_error_interface {
 	return nil
 }
 
-func start_server(info Host_Information) receiver_error_interface {
+// StartServer
+// checks to make sure info is valid,
+// starts listening for connections on the given port
+// handles an incoming connection
+func StartServer(info Host_Information) receiver_error_interface {
 
 	valid_error := info.is_valid()
 
@@ -52,7 +62,7 @@ func start_server(info Host_Information) receiver_error_interface {
 		return valid_error
 	}
 
-	server, err := net.Listen(info.protcol, info.ip+":"+info.port)
+	server, err := net.Listen(info.Protcol, info.Ip+":"+info.Port)
 
 	if err != nil {
 		return &receiver_error{
@@ -64,7 +74,7 @@ func start_server(info Host_Information) receiver_error_interface {
 
 	defer server.Close()
 	for {
-		_, err := server.Accept()
+		connection, err := server.Accept()
 		if err != nil {
 			return &receiver_error{
 				8,
@@ -74,8 +84,33 @@ func start_server(info Host_Information) receiver_error_interface {
 		}
 
 		// handle connection
+		go handleConnection(connection)
 	}
 
 	return nil
 
+}
+
+// handleConnection()
+// reads the data into a buffer and will send a confirmation back to the client
+// also logs any incomming messages and where they were sent from.
+func handleConnection(connection net.Conn) {
+	// create an input buffer
+	buffer := make([]byte, 8192)
+
+	// read io data
+	mLen, err := connection.Read(buffer)
+
+	if err != nil {
+		fmt.Println("Error reading:", err.Error())
+	}
+
+	log_message := "From:" + connection.RemoteAddr().String() + " -> " + string(buffer[:mLen])
+	logger.Log{logger.Green, time.Now().Format(time.RFC1123), log_message}.Stdout()
+
+	// send Validation back.
+	_, err = connection.Write([]byte("Echo From Server : " + connection.RemoteAddr().String() + string(buffer[:mLen])))
+
+	// close the connection
+	connection.Close()
 }
