@@ -22,12 +22,17 @@ func main() {
 	// start the listening server (receiver)
 	go serverInit(receiver.Host_Information{"Benjamin Server", "192.168.1.20", "1234", "tcp"})
 
-	_, C_err := contacts.Import("/home/benjamin/.config/ChatClient/contacts")
+	people, C_err := contacts.Import("/home/benjamin/.config/ChatClient/contacts")
 	if C_err != nil {
 		C_err.LogToFile()
 	}
 
 	// send a request every 2 seconds to the local server
 	//FROM:NotBenjamin:192.168.1.20:1234/Hello World!/Send
+
+	for {
+		time.Sleep(2 * time.Second)
+		people[1].Send("FROM:NotBenjamin:192.168.1.20:1234/Hello World!/Send")
+	}
 
 }

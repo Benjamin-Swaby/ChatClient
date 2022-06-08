@@ -1,6 +1,7 @@
 package CCprotocol
 
 import (
+	"ChatClient/receiver"
 	"ChatClient/sender"
 	"strings"
 	"time"
@@ -55,4 +56,8 @@ func ParseAsCC(req, protocol string) (CC, CC_error_interface) {
 	output_cc := CC{req_sender, req_split[1], req_split[2]}
 
 	return output_cc, nil
+}
+
+func (req *CC) FormResp(h_info receiver.Host_Information) (CC, CC_error_interface) {
+
 }

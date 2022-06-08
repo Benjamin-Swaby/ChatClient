@@ -68,7 +68,7 @@ func StartServer(info Host_Information) receiver_error_interface {
 	if err != nil {
 		return &receiver_error{
 			7,
-			"Failed to Start Server",
+			"Failed to Start Server: " + err.Error(),
 			time.Now().Format(time.RFC1123),
 			true}
 	}
