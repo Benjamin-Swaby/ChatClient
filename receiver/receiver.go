@@ -3,6 +3,10 @@ package receiver
 import (
 	"ChatClient/CCprotocol"
 	"ChatClient/logger"
+	"crypto/sha256"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"image/color"
 	"net"
 	"strconv"
 	"time"
@@ -55,7 +59,7 @@ func (hi Host_Information) is_valid() receiver_error_interface {
 // checks to make sure info is valid,
 // starts listening for connections on the given port
 // handles an incoming connection
-func StartServer(info Host_Information) receiver_error_interface {
+func StartServer(info Host_Information, CE *fyne.Container) receiver_error_interface {
 
 	valid_error := info.is_valid()
 
@@ -85,10 +89,14 @@ func StartServer(info Host_Information) receiver_error_interface {
 		}
 
 		// handle connection
-		go handleConnection(connection, info.Protcol)
+		go handleConnection(connection, info.Protcol, info, CE)
 	}
 
 	return nil
+
+}
+
+func log_message(msg, string, cc_obj CCprotocol.CC) {
 
 }
 
@@ -96,7 +104,7 @@ func StartServer(info Host_Information) receiver_error_interface {
 // reads the data into a buffer,
 // parses the request,
 // sends back a response
-func handleConnection(connection net.Conn, protocol string) {
+func handleConnection(connection net.Conn, protocol string, h_i Host_Information, CE *fyne.Container) {
 	// create an input buffer
 	buffer := make([]byte, 8192)
 
@@ -119,12 +127,15 @@ func handleConnection(connection net.Conn, protocol string) {
 		CCerr.ToLog().File()
 	}
 
-	// do something with cc_obj
+	//TODO do something with cc_obj i.e write to a UI or anything!
 	println(cc_obj.Sender_info.Name + " : " + cc_obj.Message)
+	CE.Add(canvas.NewText(time.Now().Format(time.RFC1123)+" : "+cc_obj.Sender_info.Name+" : "+cc_obj.Message, color.RGBA{255, 165, 0, 0}))
+	// log messages to a file
+	//
 
 	// send Validation back.
-	_, err = connection.Write([]byte("Received!"))
+	hash := sha256.Sum256([]byte(req))
+	_, err = connection.Write([]byte(string(hash[:])))
 
-	// close the connection
 	connection.Close()
 }

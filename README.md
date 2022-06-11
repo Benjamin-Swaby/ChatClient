@@ -16,12 +16,11 @@ This would be a message from Geof on the ip 192.168.1.10 to a client on
 the ip 192.168.1.11.
 
 ### Confirming:
-Confirmation will be a seperate request consisting of their local ip
-the senders ip and a hash of the original message. i.e:
+To confirm the message a hash of the request will be sent back to the client by the target
     
-    FROM:Benjamin:192.168.1.11:1234/c954abb0fda4c/Confirm
+    9b527f578f800bfc1067748a677fb35cf2e2ce9bf3ca1740774ee7be75136f0c
     
-If all the details match on both clients it is known that a secure transmission of the message has been made.
+If all the hash matches on both clients it is known that a secure transmission of the message has been made.
 
 ## If sent has is correct:
 Upon receiving a confirmation the client will compare the hash against a hash of the original message.
