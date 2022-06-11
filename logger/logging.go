@@ -32,7 +32,7 @@ func (l Log) Stdout() {
 func (l Log) File() {
 	out := Blue + l.Time + Reset + " :: " + l.Text_colour + l.Msg + Reset + "\n"
 
-	f, err := os.OpenFile("logs.log",
+	f, err := os.OpenFile(".ChatClient/Chatlogs.log",
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Println(err)

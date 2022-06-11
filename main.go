@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"image/color"
+	"io/ioutil"
 	"strings"
 	"time"
 )
@@ -27,17 +28,35 @@ func serverInit(HI receiver.Host_Information, CE *fyne.Container) {
 	}
 }
 
+func LoadMessages(target sender.Recipient, CE *fyne.Container) {
+	b, err := ioutil.ReadFile(".ChatClient/msgs/" + target.Name + "." + target.Ip)
+
+	if err != nil {
+		logger.Log{logger.Blue,
+			time.Now().Format(time.RFC1123),
+			"Couldn't read msgs for : " + ".ChatClient/msgs/" + target.Name + "." + target.Ip}.File()
+	}
+
+	file_contents := string(b)
+	entries := strings.Split(file_contents, "\n")
+
+	for _, entry := range entries {
+		CE.Add(canvas.NewText(entry, color.RGBA{0, 255, 0, 0}))
+	}
+
+}
+
 // Entry Point
 func main() {
 
 	conf := receiver.Host_Information{"Benjamin", "192.168.1.20", "1234", "tcp"}
 
-	people, C_err := contacts.Import("/home/benjamin/.config/ChatClient/contacts")
+	people, C_err := contacts.Import(".ChatClient/contacts")
 	if C_err != nil {
 		C_err.LogToFile()
 	}
 
-	target := people[0]
+	target := sender.Recipient{conf.Name, conf.Ip, conf.Protcol, conf.Protcol}
 
 	// send a request every 2 seconds to the local server
 	//FROM:NotBenjamin:192.168.1.20:1234/Hello World!/Send
@@ -82,6 +101,7 @@ func main() {
 
 						// set chat here.
 						chat_elems.Add(canvas.NewText("--- "+target.Name+" ---", color.RGBA{255, 255, 0, 0}))
+						LoadMessages(target, chat_elems)
 						input.PlaceHolder = "Message : " + target.Name
 					}
 
@@ -94,12 +114,18 @@ func main() {
 				chat_elems.Add(canvas.NewText("Protcol :"+conf.Protcol, color.RGBA{0, 0, 255, 0}))
 
 			case "/list":
+
+				if len(people) == 0 {
+					chat_elems.Add(canvas.NewText("No Contacts", color.RGBA{255, 0, 255, 0}))
+					break
+				}
+
 				for _, person := range people {
-
 					strout := person.Name + " on " + person.Ip + ":" + person.Port
-
 					chat_elems.Add(canvas.NewText(strout, color.RGBA{255, 0, 255, 0}))
 				}
+			case "/clear":
+				chat_elems.RemoveAll()
 			}
 
 		} else {
@@ -120,12 +146,19 @@ func main() {
 
 	})
 
+	// notification
+	notif := container.NewVBox()
+
 	input_bar := container.New(layout.NewBorderLayout(nil, nil, nil, send), send, input)
 	// final render layout
-	content := container.New(layout.NewBorderLayout(nil, input_bar, nil, nil), input_bar, Chat)
+	content := container.New(layout.NewBorderLayout(notif, input_bar, nil, nil), notif, input_bar, Chat)
 
 	// start the listening server (receiver)
-	go serverInit(conf, chat_elems)
+	go serverInit(conf, notif)
+
+	go func() {
+
+	}()
 
 	w.SetContent(content)
 	w.Resize(fyne.NewSize(500, 300))

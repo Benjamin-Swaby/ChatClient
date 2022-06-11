@@ -77,5 +77,51 @@ The hashes match so the connection is closed
     
 
 
+## Files and System
+### Configuration and Setup
+
+Setup will involve creating the directory `.ChatClient` and `.ChatClient/msgs`
+this can be achieved with a
     
-    
+    mkdir -p .ChatClient/msgs
+ 
+### Contacts file
+
+The contacts file (`.ChatClient/contacts`) will contain a list of your contacts in the format:
+
+    nickname IP port protocol
+
+with each record being a new line
+
+### Config file
+
+    //TODO - used to set server config (HostInformation)
+
+### Chatlogs file
+
+Upon running the application you may notice the file `.ChatClient/Chatlogs.log` this is the main
+log file of the program and is coloured such that when viewed with `cat` will give you a nice input 
+
+## GUI usage
+
+    //TODO - add images
+
+
+## CMDS
+The Gui provided uses text base commmands to send requests and display requests
+
+| CMD    |                             Description                             | Example |
+|:-------|:-------------------------------------------------------------------:|--------:|
+| /target |                  Change the target of the request                   | /target Benjamin|
+| /clear |                    clears the chat buffer window                    | /clear |
+| /me    |                  shows personal server information                  | /me|
+| /list  |             lists the contacts avalible to your system              | /list|
+| /add   | Add a client to your contacts with args : Nick , IP, Port, Protocol | /add Benjamin 192.168.1.20 1234 tcp |
+
+## UI
+The ui consists of 3 main parts - the input buffer and send button, the chat buffer, the notification popup.
+
+- The notification popup will show you a message sent to your client in orange for 5 seconds at the top of the screen.
+- Upon switching targets - your previous messages will be displayed in green.
+- Only white text is sent to the target as a message.
+

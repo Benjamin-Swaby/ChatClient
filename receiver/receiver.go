@@ -7,7 +7,9 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"image/color"
+	"log"
 	"net"
+	"os"
 	"strconv"
 	"time"
 )
@@ -96,7 +98,18 @@ func StartServer(info Host_Information, CE *fyne.Container) receiver_error_inter
 
 }
 
-func log_message(msg, string, cc_obj CCprotocol.CC) {
+func Write_message(msg string, cc_obj CCprotocol.CC) {
+
+	f, err := os.OpenFile(".ChatClient/msgs/"+cc_obj.Sender_info.Name+"."+cc_obj.Sender_info.Ip,
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Println(err)
+	}
+	defer f.Close()
+
+	if _, err := f.WriteString(msg); err != nil {
+		log.Println(err)
+	}
 
 }
 
@@ -129,9 +142,15 @@ func handleConnection(connection net.Conn, protocol string, h_i Host_Information
 
 	//TODO do something with cc_obj i.e write to a UI or anything!
 	println(cc_obj.Sender_info.Name + " : " + cc_obj.Message)
-	CE.Add(canvas.NewText(time.Now().Format(time.RFC1123)+" : "+cc_obj.Sender_info.Name+" : "+cc_obj.Message, color.RGBA{255, 165, 0, 0}))
-	// log messages to a file
-	//
+
+	// send notification
+	go func() {
+		CE.Add(canvas.NewText(time.Now().Format(time.RFC1123)+" : "+cc_obj.Sender_info.Name+" : "+cc_obj.Message, color.RGBA{255, 165, 0, 0}))
+		time.Sleep(2 * time.Second)
+		CE.RemoveAll()
+	}()
+
+	go Write_message(time.Now().Format(time.RFC1123)+" : "+cc_obj.Sender_info.Name+" : "+cc_obj.Message+"\n", cc_obj)
 
 	// send Validation back.
 	hash := sha256.Sum256([]byte(req))
